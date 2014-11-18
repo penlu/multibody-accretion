@@ -1,65 +1,101 @@
+#include <stdlib.h>
+
 // binary tree node
-typedef struct tree {
-  void* data;
-  tree* l;
-  tree* r;
-} tree;
+typedef struct node {
+  void* key;
+  void* val;
+  struct node* l;
+  struct node* r;
+} node;
 
-tree* newnode(void* data) {
-  tree* node = (tree*) malloc(sizeof(tree));
-  node->data = data;
-  node->l = NULL;
-  node->r = NULL;
+typedef struct btree {
+  struct node* root; // root of this tree
+  int (*cmp)(void* a, void* b); // key comparison fxn for this tree
+} btree;
 
-  return node;
+btree* btree_new(int (*cmp)(void* a, void* b)) {
+  btree* new = (btree*) malloc(sizeof(btree));
+  new->root = NULL;
+  new->cmp = cmp;
+
+  return new;
 }
 
-// add a piece of data to the tree using given comparison fxn
-// returns the new node in which the data is stored
-tree* tree_add(tree* root, void* data, int (*cmp)(void* a, void* b)) {
-  int res = cmp(data, root->data);
+node* new(void* key, void* val) {
+  node* new = (node*) malloc(sizeof(node));
+  new->key = key;
+  new->val = val;
+  new->l = NULL;
+  new->r = NULL;
+
+  return new;
+}
+
+node* put(node* n, void* key, void* val, int (*cmp)(void* a, void* b)) {
+  int res = cmp(key, n->key);
   if (res < 0) {
     // go left
-    if (root->l != NULL)
-      return tree_add(root->l, data, cmp);
+    if (n->l != NULL)
+      return put(n->l, key, val, cmp);
     else
-      return root->l = newnode(data);
+      return n->l = new(key, val);
   } else if (res > 0) {
     // go right
-    if (root->r != NULL)
-      return tree_add(root->r, data, cmp);
+    if (n->r != NULL)
+      return put(n->r, key, val, cmp);
     else
-      return root->r = newnode(data);
+      return n->r = new(key, val);
   } else {
-    // data already exists in tree
-    return root;
+    // this node
+    n->val = val;
+    return n;
   }
 }
 
-// return the node in which a piece of data is stored
-// or null if no such node
-tree* tree_find(tree* root, void* data, int (*cmp)(void* a, void* b)) {
+// add a piece of data to the tree
+void btree_put(btree* t, void* key, void* val) {
+  if (t->root == NULL)
+    t->root = new(key, val);
+  else
+    put(t->root, key, val, t->cmp);
+}
+
+// return value associated with a key
+void* get(node* n, void* key, int (*cmp)(void* a, void* b)) {
   // base case (not found)
-  if (root == NULL)
+  if (n == NULL)
     return NULL;
 
   // otherwise, recurse to find
-  int res = cmp(data, root->data);
+  int res = cmp(key, n->key);
   if (res < 0)
-    return tree_find(root->l, data, cmp);
+    return get(n->l, key, cmp);
   else if (res > 0)
-    return tree_find(root->r, data, cmp);
+    return get(n->r, key, cmp);
   else
-    return root;
+    return n->val;
 }
 
-// free a tree, calling the provided function on each piece of data
-void tree_free(tree* root, void (*remove)(void* data)) {
-  // free children
-  tree_free(root->l, remove);
-  tree_free(root->r, remove);
-  
-  // free self
-  remove(root->data);
-  free(root);
+// find value associated with key in tree
+void* btree_get(btree* t, void* key) {
+  return get(t->root, key, t->cmp);
 }
+
+void nfree(node* n, void (*kfree)(void* key), void (*vfree)(void* val)) {
+  if (n != NULL) {
+    // free children
+    nfree(n->l, kfree, vfree);
+    nfree(n->r, kfree, vfree);
+
+    // free self
+    kfree(n->key);
+    vfree(n->val);
+    free(n);
+  }
+}
+
+// free a tree, calling the provided functions on each key/value
+void btree_free(btree* t, void (*kfree)(void* key), void (*vfree)(void* val)) {
+  nfree(t->root, kfree, vfree);
+}
+
