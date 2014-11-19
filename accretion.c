@@ -1,5 +1,8 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#include "disjoint.h"
 
 #define NBODIES 1000
 #define SOLARM 0.998
@@ -17,7 +20,27 @@ typedef union vector {
   double e[3];
 } vector;
 
-double norm(vector a, vector b) {
+vector vec_add(vector a, vector b) {
+  vector sum;
+  for (int i = 0; i < 3; i++)
+    sum.e[i] = a.e[i] + b.e[i];
+
+  return sum;
+}
+
+vector vec_mul(vector a, double c) {
+  vector prod;
+  for (int i = 0; i < 3; i++)
+    prod.e[i] = a.e[i] * c;
+
+  return prod;
+}
+
+vector vec_div(vector a, double c) {
+  return vec_mul(a, 1/c);
+}
+
+double dist(vector a, vector b) {
   double acc = 0;
   for (int i = 0; i < 3; i++) {
     double diff = b.e[i] - a.e[i];
@@ -40,20 +63,21 @@ void step(int n, body bodies[]);
 
 int main(int argc, char* argv[]) {
   // create initial state
-  body bodies[NBODIES];
-  init(NBODIES, bodies);
+  int n = NBODIES;
+  body bodies[n];
+  init(n, bodies);
 
   // begin simulating
   while (1) {
-    output(NBODIES, bodies);
-    NBODIES = collide(NBODIES, bodies);
-    step(NBODIES, bodies);
+    output(n, bodies);
+    n = collide(n, bodies);
+    step(n, bodies);
   }
 }
 
 // return a random double in [0, 1)
 double random() {
-  return (double) rand() / (RAND_MAX + 1);
+  return (double) rand() / RAND_MAX;
 }
 
 // box-muller transform generates a random variable from a gaussian
@@ -90,50 +114,89 @@ void init(int n, body bodies[]) {
     double rad = boxmuller();
 
     // set particle position
-    bodies[i].pos.v.x = rad * cos(angle);
-    bodies[i].pos.v.y = rad * sin(angle);
-    bodies[i].pos.v.z = 0;
+    bodies[i].pos.x = rad * cos(angle);
+    bodies[i].pos.y = rad * sin(angle);
+    bodies[i].pos.z = 0;
     
     // calculate orbital velocity for circular orbit
     double omass = SOLARM + (1 - SOLARM) * erf(rad); // mass inside orbit
     double vel = sqrt(omass / rad);
 
     // set particle velocity
-    bodies[i].vel.v.x = -vel * sin(angle);
-    bodies[i].vel.v.y = vel * cos(angle);
-    bodies[i].vel.v.z = 0;
+    bodies[i].vel.x = -vel * sin(angle);
+    bodies[i].vel.y = vel * cos(angle);
+    bodies[i].vel.z = 0;
   }
 
   // set sun properties
   bodies[0].m = SOLARM;
-  bodies[0].pos.v = {0, 0, 0};
-  bodies[0].vel.v = {0, 0, 0};
+  vector zero = {
+    .x = 0,
+    .y = 0,
+    .z = 0
+  };
+  bodies[0].pos = zero;
+  bodies[0].vel = zero;
   // TODO center-of-mass corrections
 }
 
 // outputs body information
-int step = 0;
+int generation = 0;
 void output(int n, body bodies[]) {
-  printf("%d bodies at step %d\n", n, step++);
+  printf("%d bodies at step %d\n", n, generation++);
+}
+
+// merge two bodies
+body body_merge(body a, body b) {
+  body merged;
+  merged.m = a.m + b.m;
+  merged.pos = vec_add(a.pos, b.pos);
+  merged.vel = vec_div(vec_add(vec_mul(a.pos, a.m), vec_mul(a.pos, b.m)), b.m);
+
+  return merged;
 }
 
 // resolves collisions between bodies, returning new body count
 int collide(int n, body bodies[]) {
-  // find largest object
-  double maxrad = bodies[0];
-  int maxi = 0;
+  // initialize disjoint set and bodies to include
+  set* bsets[n];
+  int include[n];
   for (int i = 0; i < n; i++) {
-    double thisrad = RADIUS(bodies[i].m);
-    if (thisrad > maxrad) {
-      maxrad = thisrad;
-      maxi = i;
+    bsets[i] = make_set(i);
+    include[i] = 1;
+  }
+
+  // find collisions
+  for (int i = 0; i < n; i++) {
+    vector ipos = bodies[i].pos;
+    double irad = RADIUS(bodies[i].m);
+
+    // which bodies are in contact with this one?
+    for (int j = i; j < n; j++) {
+      vector jpos = bodies[j].pos;
+      double jrad = RADIUS(bodies[j].m);
+      
+      // merge sets of colliding objects
+      if (dist(ipos, jpos) < (irad + jrad) * (irad + jrad))
+        merge(bsets[i], bsets[j]);
     }
   }
 
-  // form mesh for collision detection
-  // we bucket all of the items into mesh cells so that we only have to search
-  // the nearest neighbor cells for possible collisions.
-  // mesh cells form an extremely sparse array so we use a treelike data 
-  // structure to store them.
-  // and by treelike I mean binary tree
+  // merge objects
+  for (int i = 0; i < n; i++) {
+    int rootidx = get_value(find(bsets[i]));
+    if (rootidx != i) {
+      include[i] = 0;
+      bodies[rootidx] = body_merge(bodies[rootidx], bodies[i]);
+    }
+  }
+
+  // copy down
+  int j = 0;
+  for (int i = 0; i < n; i++) {
+    if (include[i])
+      bodies[j++] = bodies[i];
+  }
+
+  return j;
 }
