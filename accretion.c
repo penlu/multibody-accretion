@@ -2,53 +2,15 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "vector.h"
 #include "disjoint.h"
 
 #define NBODIES 1000
 #define SOLARM 0.998
 #define BODYM ((1 - SOLARM) / NBODIES)
 #define PI 3.1415926535897932
-#define DENSITY 8000000000
-#define RADIUS(MASS) cbrt(MASS/DENSITY)
-
-typedef union vector {
-  struct {
-    double x;
-    double y;
-    double z;
-  };
-  double e[3];
-} vector;
-
-vector vec_add(vector a, vector b) {
-  vector sum;
-  for (int i = 0; i < 3; i++)
-    sum.e[i] = a.e[i] + b.e[i];
-
-  return sum;
-}
-
-vector vec_mul(vector a, double c) {
-  vector prod;
-  for (int i = 0; i < 3; i++)
-    prod.e[i] = a.e[i] * c;
-
-  return prod;
-}
-
-vector vec_div(vector a, double c) {
-  return vec_mul(a, 1/c);
-}
-
-double dist(vector a, vector b) {
-  double acc = 0;
-  for (int i = 0; i < 3; i++) {
-    double diff = b.e[i] - a.e[i];
-    acc += diff * diff;
-  }
-
-  return acc;
-}
+#define DENSITY 8000000000 // TODO in AU scale; what was this
+#define RADIUS(MASS) cbrt((MASS)/DENSITY)
 
 typedef struct body {
   double m;
@@ -71,7 +33,7 @@ int main(int argc, char* argv[]) {
   while (1) {
     output(n, bodies);
     n = collide(n, bodies);
-    step(n, bodies);
+    step(n, bodies, 0.01);
   }
 }
 
@@ -103,7 +65,7 @@ double boxmuller() {
 // this is a coplanar state with a central sun surrounded by a swarm of 
 // protoplanetary bodies
 void init(int n, body bodies[]) {
-  srand(0xa56c30da);
+  srand(0xa56c30da); // TODO temp random bytes from random.org
   
   // generate bodies
   for (int i = 1; i < NBODIES; i++) {
@@ -199,4 +161,28 @@ int collide(int n, body bodies[]) {
   }
 
   return j;
+}
+
+// steps the simulation one timestep
+// using a naive integrator; no optimizations
+void step(int n, body bodies[], double h) {
+  // accumulate accelerations
+  for (int i = 0; i < n - 1; i++)
+    for (int j = i; j < n; j++) {
+      body a = bodies[i];
+      body b = bodies[j];
+
+      // calculate accelerations due to gravity
+      double d = sqrt(dist(a.pos, b.pos));
+      vector f = vec_mul(vec_sub(a.pos, b.pos), h*d*d*d);
+
+      a.vel = vec_sub(a.vel, vec_mul(f, b.m));
+      b.vel = vec_add(b.vel, vec_mul(f, a.m));
+    }
+
+  // accumulate velocities
+  for (int i = 0; i < n; i++) {
+    body a = bodies[i];
+    a.pos = vec_add(a.pos, vec_mul(a.vel, h));
+  }
 }
