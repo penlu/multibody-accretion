@@ -21,7 +21,7 @@ typedef struct body {
 void init(int n, body bodies[]);
 void output(int n, body bodies[]);
 int collide(int n, body bodies[]);
-void step(int n, body bodies[]);
+void step(int n, body bodies[], double h);
 
 int main(int argc, char* argv[]) {
   // create initial state

@@ -33,5 +33,6 @@ double vec_dot(vector a, vector b) {
 }
 
 double dist(vector a, vector b) {
-  return vec_dot(vec_diff(a, b), vec_diff(a, b));
+  vector diff = vec_sub(a, b);
+  return vec_dot(diff, diff);
 }
