@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "vector.h"
 #include "disjoint.h"
@@ -23,7 +24,24 @@ void output(int n, body bodies[]);
 int collide(int n, body bodies[]);
 void step(int n, body bodies[], double h);
 
-int main(int argc, char* argv[]) {
+int VERBOSITY = 1;
+
+int main(int argc, char** argv) {
+  // parse command line arguments
+
+  while (argc > 2) {
+    if (strcmp(argv[1], "-v") == 0) {
+      VERBOSITY = atoi(argv[2]);
+      
+      // next argument
+      argc -= 2;
+      argv += 2;
+    } else {
+      printf("Unrecognized argument %s\n", argv[1]);
+      return 0;
+    }
+  }
+
   // create initial state
   int n = NBODIES;
   body bodies[n];
@@ -42,10 +60,10 @@ double random() {
   return (double) rand() / RAND_MAX;
 }
 
-// box-muller transform generates a random variable from a gaussian
-// with mean 0, variance 1
+// box-muller transform generates two independent random variables
+// from a gaussian with mean 0, variance 1
 // code from http://www.design.caltech.edu/erik/Misc/Gaussian.html
-double boxmuller() {
+vector gaussian2d() {
   double x1, x2, w, y1, y2;
 
   do {
@@ -58,7 +76,12 @@ double boxmuller() {
   y1 = x1 * w;
   y2 = x2 * w;
 
-  return y1; // TODO use both perfectly good values
+  vector v;
+  v.x = y1;
+  v.y = y2;
+  v.z = 0;
+
+  return v;
 }
 
 // initializes a state with n bodies
@@ -72,17 +95,15 @@ void init(int n, body bodies[]) {
     bodies[i].m = BODYM;
     
     // generate particle at random location in disk
-    double angle = random() * 2 * PI;
-    double rad = boxmuller();
+    vector pos = gaussian2d();
+    bodies[i].pos = pos;
+    double radsq = vec_dot(pos, pos);
+    double angle = atan2(pos.y, pos.x);
 
-    // set particle position
-    bodies[i].pos.x = rad * cos(angle);
-    bodies[i].pos.y = rad * sin(angle);
-    bodies[i].pos.z = 0;
-    
     // calculate orbital velocity for circular orbit
-    double omass = SOLARM + (1 - SOLARM) * erf(rad); // mass inside orbit
-    double vel = sqrt(omass / rad);
+    // mass inside orbit follows rayleigh distribution
+    double omass = SOLARM + (1 - SOLARM) * (1 - exp(-radsq / 2));
+    double vel = sqrt(omass / sqrt(radsq));
 
     // set particle velocity
     bodies[i].vel.x = -vel * sin(angle);
@@ -102,10 +123,28 @@ void init(int n, body bodies[]) {
   // TODO center-of-mass corrections
 }
 
+void statedump(int n, body bodies[]) {
+  for (int i = 0; i < n; i++) {
+    body a = bodies[i];
+    printf("body %d:\n", i);
+    printf("  mass: %f\n", a.m);
+    printf("  pos:\n    x:%f\n    y:%f\n    z:%f\n",
+      a.pos.x, a.pos.y, a.pos.z);
+    printf("  vel:\n    x:%f\n    y:%f\n    z:%f\n",
+      a.vel.x, a.vel.y, a.vel.z);
+    printf("\n");
+  }
+}
+
 // outputs body information
 int generation = 0;
 void output(int n, body bodies[]) {
-  printf("%d bodies at step %d\n", n, generation++);
+  if (VERBOSITY >= 1)
+    printf("%d bodies at step %d\n", n, generation++);
+
+  if (VERBOSITY >= 2)
+    // dump information on all bodies
+    statedump(n, bodies);
 }
 
 // merge two bodies
@@ -169,20 +208,20 @@ void step(int n, body bodies[], double h) {
   // accumulate accelerations
   for (int i = 0; i < n - 1; i++)
     for (int j = i; j < n; j++) {
-      body a = bodies[i];
-      body b = bodies[j];
+      body *a = &bodies[i];
+      body *b = &bodies[j];
 
       // calculate accelerations due to gravity
-      double d = sqrt(dist(a.pos, b.pos));
-      vector f = vec_mul(vec_sub(a.pos, b.pos), h*d*d*d);
+      double d = sqrt(dist(a->pos, b->pos));
+      vector f = vec_mul(vec_sub(a->pos, b->pos), h*d*d*d);
 
-      a.vel = vec_sub(a.vel, vec_mul(f, b.m));
-      b.vel = vec_add(b.vel, vec_mul(f, a.m));
+      a->vel = vec_sub(a->vel, vec_mul(f, b->m));
+      b->vel = vec_add(b->vel, vec_mul(f, a->m));
     }
 
   // accumulate velocities
   for (int i = 0; i < n; i++) {
-    body a = bodies[i];
-    a.pos = vec_add(a.pos, vec_mul(a.vel, h));
+    body *a = &bodies[i];
+    a->pos = vec_add(a->pos, vec_mul(a->vel, h));
   }
 }
