@@ -3,8 +3,8 @@
 #include <math.h>
 #include <string.h>
 
-#include "vector.h"
-#include "body.h"
+#include "../vector.h"
+#include "../body.h"
 
 int NBODIES = 1000; // body count
 double SOLARM = 0.998; // solar mass
