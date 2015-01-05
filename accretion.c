@@ -15,7 +15,7 @@ int VERBOSITY = 1;
 
 int main(int argc, char** argv) {
   // parse command line arguments
-  FILE* io = stdin;
+  FILE* infile = stdin;
   while (argc > 2) {
     if (strcmp(argv[1], "-v") == 0) {
       VERBOSITY = atoi(argv[2]);
@@ -29,13 +29,22 @@ int main(int argc, char** argv) {
     }
   }
 
+  // last argument is a filename
+  if (argc == 2) {
+    infile = fopen(argv[1], "r");
+    if (infile == NULL) {
+      printf("Could not find file %s\n", argv[1]);
+      return 1;
+    }
+  }
+
   // read initial state from input
   int n;
-  fread(&n, 4, 1, io);
+  fread(&n, 4, 1, infile);
   
   body bodies[n];
   for (int i = 0; i < n; i++)
-    body_in_binary(&bodies[i], io);
+    body_in_binary(&bodies[i], infile);
 
   // begin simulating
   while (1) {
@@ -48,14 +57,19 @@ int main(int argc, char** argv) {
 // outputs body information
 int generation = 0;
 void output(int n, body bodies[]) {
+  // dump body information to stdout
+  fwrite(&n, 4, 1, stdout);
+  for (int i = 0; i < n; i++)
+    body_out_binary(&bodies[i], stdout);
+
   if (VERBOSITY >= 1)
     fprintf(stderr, "%d bodies at step %d\n", n, generation++);
 
   if (VERBOSITY >= 2)
     // dump information on all bodies
     for (int i = 0; i < n; i++) {
-      printf("body %d:\n", i);
-      body_out_readable(&bodies[i], stdout);
+      fprintf(stderr, "body %d:\n", i);
+      body_out_readable(&bodies[i], stderr);
     }
 }
 

@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 }
 
 // return a random double in [0, 1)
-double random() {
+double rdouble() {
   return (double) rand() / RAND_MAX;
 }
 
@@ -80,8 +80,8 @@ vector gaussian2d() {
   double x1, x2, w, y1, y2;
 
   do {
-    x1 = 2.0 * random() - 1.0;
-    x2 = 2.0 * random() - 1.0;
+    x1 = 2.0 * rdouble() - 1.0;
+    x2 = 2.0 * rdouble() - 1.0;
     w = x1 * x1 + x2 * x2;
   } while ( w >= 1.0 );
 
