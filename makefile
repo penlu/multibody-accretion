@@ -3,7 +3,7 @@ O=3
 CC=gcc
 CFLAGS=-c -Wall --std=c11 -O$(O)
 
-all: accretion
+all: accretion gaussian_cloud star_planet
 
 accretion: accretion.o vector.o body.o disjoint.o
 	$(CC) accretion.o vector.o disjoint.o body.o -o accretion -lm

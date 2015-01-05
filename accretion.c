@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 int generation = 0;
 void output(int n, body bodies[]) {
   if (VERBOSITY >= 1)
-    printf("%d bodies at step %d\n", n, generation++);
+    fprintf(stderr, "%d bodies at step %d\n", n, generation++);
 
   if (VERBOSITY >= 2)
     // dump information on all bodies
