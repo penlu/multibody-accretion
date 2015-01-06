@@ -4,8 +4,9 @@
 #include <string.h>
 
 #include "vector.h"
-#include "disjoint.h"
 #include "body.h"
+#include "disjoint.h"
+#include "mesh.h"
 
 void output(int n, body bodies[]);
 int collide(int n, body bodies[]);
@@ -92,6 +93,19 @@ int collide(int n, body bodies[]) {
     bsets[i] = make_set(i);
     include[i] = 1;
   }
+
+  // find largest object
+  double maxrad = bodies[0];
+  int maxi = 0;
+  for (int i = 0; i < n; i++) {
+    double rad = RADIUS(bodies[i].m);
+    if (rad > maxrad) {
+      maxrad = rad;
+      maxi = i;
+    }
+  }
+
+  // form mesh for collision detection
 
   // find collisions
   for (int i = 0; i < n; i++) {

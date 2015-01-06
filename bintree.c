@@ -8,13 +8,13 @@ typedef struct node {
   struct node* r;
 } node;
 
-typedef struct btree {
+typedef struct bintree {
   struct node* root; // root of this tree
   int (*cmp)(void* a, void* b); // key comparison fxn for this tree
-} btree;
+} bintree;
 
-btree* btree_new(int (*cmp)(void* a, void* b)) {
-  btree* new = (btree*) malloc(sizeof(btree));
+bintree* bintree_new(int (*cmp)(void* a, void* b)) {
+  bintree* new = (bintree*) malloc(sizeof(bintree));
   new->root = NULL;
   new->cmp = cmp;
 
@@ -53,7 +53,7 @@ node* put(node* n, void* key, void* val, int (*cmp)(void* a, void* b)) {
 }
 
 // add a piece of data to the tree
-void btree_put(btree* t, void* key, void* val) {
+void bintree_put(bintree* t, void* key, void* val) {
   if (t->root == NULL)
     t->root = new(key, val);
   else
@@ -77,7 +77,7 @@ void* get(node* n, void* key, int (*cmp)(void* a, void* b)) {
 }
 
 // find value associated with key in tree
-void* btree_get(btree* t, void* key) {
+void* bintree_get(bintree* t, void* key) {
   return get(t->root, key, t->cmp);
 }
 
@@ -95,7 +95,7 @@ void nfree(node* n, void (*kfree)(void* key), void (*vfree)(void* val)) {
 }
 
 // free a tree, calling the provided functions on each key/value
-void btree_free(btree* t, void (*kfree)(void* key), void (*vfree)(void* val)) {
+void bintree_free(bintree* t, void (*kfree)(void* key), void (*vfree)(void* val)) {
   nfree(t->root, kfree, vfree);
 }
 

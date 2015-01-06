@@ -1,7 +1,7 @@
 O=3
 
 CC=gcc
-CFLAGS=-c -Wall --std=c11 -O$(O)
+CFLAGS=-c -Wall --std=c11 -O$(O) -g -pg
 
 all: accretion gaussian_cloud star_planet
 
