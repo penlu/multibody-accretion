@@ -1,11 +1,11 @@
 typedef struct mesh mesh;
 
-typedef struct node {
-  void* ptr;
-  struct node* next;
-} node;
+typedef struct body_list {
+  body body;
+  struct body_list* next;
+} body_list;
 
 mesh* mesh_new(double size);
-void mesh_put(mesh* m, vector pos, void* ptr);
-node* mesh_get(mesh* m, vector pos, int rad);
-void mesh_free(mesh* m, void (*ptrfree)(void* ptr));
+void mesh_put(mesh* m, body b);
+body_list* mesh_get(mesh* m, vector p, int rad);
+void mesh_free(mesh* m);

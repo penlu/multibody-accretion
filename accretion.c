@@ -95,19 +95,19 @@ int collide(int n, body bodies[]) {
   }
 
   // find largest object
-  double maxrad = bodies[0];
-  int maxi = 0;
+  double maxrad = RADIUS(bodies[0].m);
   for (int i = 0; i < n; i++) {
     double rad = RADIUS(bodies[i].m);
-    if (rad > maxrad) {
+    if (rad > maxrad)
       maxrad = rad;
-      maxi = i;
-    }
   }
 
   // form mesh for collision detection
+  mesh* m = mesh_new(maxrad);
+  for (int i = 0; i < n; i++)
+    mesh_put(m, bodies[i]);
 
-  // find collisions
+  // TODO find collisions using mesh
   for (int i = 0; i < n; i++) {
     vector ipos = bodies[i].pos;
     double irad = RADIUS(bodies[i].m);

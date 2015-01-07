@@ -5,20 +5,26 @@ CFLAGS=-c -Wall --std=c11 -O$(O) -g -pg
 
 all: accretion gaussian_cloud star_planet
 
-accretion: accretion.o vector.o body.o disjoint.o
-	$(CC) accretion.o vector.o disjoint.o body.o -o accretion -lm
+accretion: accretion.o vector.o body.o disjoint.o mesh.o bintree.o
+	$(CC) accretion.o vector.o disjoint.o body.o mesh.o bintree.o -o accretion -lm
 
 accretion.o: accretion.c vector.h body.h disjoint.h
 	$(CC) $(CFLAGS) accretion.c
 
-vector.o: vector.c
-	$(CC) $(CFLAGS) vector.c
+disjoint.o: disjoint.c
+	$(CC) $(CFLAGS) disjoint.c
+
+mesh.o: mesh.c vector.h body.h bintree.h
+	$(CC) $(CFLAGS) mesh.c
+
+bintree.o: bintree.c
+	$(CC) $(CFLAGS) bintree.c
 
 body.o: body.c vector.h
 	$(CC) $(CFLAGS) body.c
 
-disjoint.o: disjoint.c
-	$(CC) $(CFLAGS) disjoint.c
+vector.o: vector.c
+	$(CC) $(CFLAGS) vector.c
 
 # TODO: automate initial state generator compilation
 gaussian_cloud: gaussian_cloud.o vector.o body.o
@@ -35,4 +41,4 @@ star_planet.o: init/star_planet.c vector.h body.h
 
 # TODO: automate binary removal
 clean:
-	rm -r *.o accretion gaussian_cloud star_planet
+	rm *.o accretion gaussian_cloud star_planet
