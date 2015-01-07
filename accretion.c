@@ -103,23 +103,33 @@ int collide(int n, body bodies[]) {
   }
 
   // form mesh for collision detection
-  mesh* m = mesh_new(maxrad);
+  mesh* m = mesh_new(maxrad * 2);
   for (int i = 0; i < n; i++)
-    mesh_put(m, bodies[i]);
+    mesh_put(m, bodies[i].pos, i);
 
-  // TODO find collisions using mesh
+  // find collisions
   for (int i = 0; i < n; i++) {
     vector ipos = bodies[i].pos;
     double irad = RADIUS(bodies[i].m);
 
     // which bodies are in contact with this one?
-    for (int j = i; j < n; j++) {
+    // look up position in mesh
+    body_list* cur = mesh_get(m, ipos, 1);
+    body_list* prev = NULL;
+    while (cur) {
+      // get candidate collider
+      int j = cur->index;
       vector jpos = bodies[j].pos;
       double jrad = RADIUS(bodies[j].m);
-      
+
       // merge sets of colliding objects
       if (dist(ipos, jpos) < (irad + jrad) * (irad + jrad))
         merge(bsets[i], bsets[j]);
+
+      // traverse and free
+      free(prev);
+      prev = cur;
+      cur = cur->next;
     }
   }
 

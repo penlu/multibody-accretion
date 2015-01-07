@@ -54,10 +54,10 @@ typedef struct cell {
   body_list* bodies;
 } cell;
 
-void mesh_put(mesh* m, body b) {
+void mesh_put(mesh* m, vector v, int i) {
   // calculate mesh cell index
   index* idx = (index*) malloc(sizeof(idx));
-  *idx = vec_to_idx(b.pos, m->size);
+  *idx = vec_to_idx(v, m->size);
   
   // get mesh cell (make a new one if absent)
   cell* c = bintree_get(m->tree, idx);
@@ -68,14 +68,14 @@ void mesh_put(mesh* m, body b) {
   
   // add new item to mesh
   body_list* new = malloc(sizeof(body_list));
-  new->body = b;
+  new->index = i;
   new->next = c->bodies;
   c->bodies = new;
 }
 
 // TODO work out return method that doesn't require caller to free
-body_list* mesh_get(mesh* m, vector p, int rad) {
-  index idx = vec_to_idx(p, m->size);
+body_list* mesh_get(mesh* m, vector v, int rad) {
+  index idx = vec_to_idx(v, m->size);
   index cur = idx;
 
   body_list* list = NULL;
@@ -90,7 +90,7 @@ body_list* mesh_get(mesh* m, vector p, int rad) {
         if (c)
           for (body_list* item = c->bodies; item; item = item->next) {
             body_list* append = (body_list*) malloc(sizeof(body_list));
-            append->body = item->body;
+            append->index = item->index;
             append->next = list;
           }
       }

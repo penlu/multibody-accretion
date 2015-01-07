@@ -51,3 +51,4 @@ To include:
   - state parser and conversion to human-readable form
   - malformed input handling
   - binary tree tests
+  - collision testing
