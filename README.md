@@ -41,12 +41,9 @@ the colliders. Objects are taken to be spherical, with a constant density
 
 To include:
 -----------
-  - density option, gravitational constant option, timestep... for better 
-    simulation control
   - gaussian cloud statistical property verification
   - two-body integrator accuracy test
   - better integration method
-  - more efficient than n^2 collision detection
   - tree-based gravity approximation
   - a less stupid makefile
   - a build folder to contain the mess
@@ -54,5 +51,4 @@ To include:
   - energy/momentum/other conservation checking
   - state parser and conversion to human-readable form
   - malformed input handling
-  - binary tree tests
   - collision testing

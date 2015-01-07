@@ -1,8 +1,5 @@
 #include <stdio.h>
 
-#define DENSITY 8000000000 // TODO in AU scale; what was this
-#define RADIUS(MASS) cbrt((MASS)/DENSITY)
-
 typedef struct body {
   double m;
   vector pos;

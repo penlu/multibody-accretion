@@ -8,21 +8,34 @@
 #include "disjoint.h"
 #include "mesh.h"
 
+#define RADIUS(MASS) cbrt((MASS)/DENSITY)
+
 void output(int n, body bodies[], double time);
 int collide(int n, body bodies[]);
 void step(int n, body bodies[], double h);
 
 int VERBOSITY = 1;
 double STEPSIZE = 0.01;
+double DENSITY = 10000000; // density of the sun * 4/3 pi in solar masses/AU^3
 
 int main(int argc, char** argv) {
   // parse command line arguments
   FILE* infile = stdin;
   while (argc > 2) {
-    if (strcmp(argv[1], "-v") == 0) {
+    if (!strcmp(argv[1], "-v")) {
       VERBOSITY = atoi(argv[2]);
       
       // next argument
+      argc -= 2;
+      argv += 2;
+    } else if (!strcmp(argv[1], "-h")) {
+      STEPSIZE = atof(argv[2]);
+
+      argc -= 2;
+      argv += 2;
+    } else if (!strcmp(argv[1], "-d")) {
+      DENSITY = atoi(argv[2]);
+
       argc -= 2;
       argv += 2;
     } else {
@@ -88,6 +101,12 @@ body body_merge(body a, body b) {
   merged.vel = vec_div(vec_add(vec_mul(a.pos, a.m), vec_mul(a.pos, b.m)), b.m);
 
   return merged;
+}
+
+double radius(double mass) {
+  // rho * 4/3 pi rad^3 = mass
+  // rad = cbrt(mass / (rho * 4/3 pi))
+  return cbrt(mass / DENSITY);
 }
 
 // resolves collisions between bodies, returning new body count
