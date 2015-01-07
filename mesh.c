@@ -56,18 +56,20 @@ typedef struct cell {
 
 void mesh_put(mesh* m, vector v, int i) {
   // calculate mesh cell index
-  index* idx = (index*) malloc(sizeof(idx));
+  index* idx = (index*) malloc(sizeof(index));
   *idx = vec_to_idx(v, m->size);
   
   // get mesh cell (make a new one if absent)
-  cell* c = bintree_get(m->tree, idx);
+  cell* c = (cell*) bintree_get(m->tree, idx);
   if (c == NULL) {
     c = (cell*) malloc(sizeof(cell));
+    c->bodies = NULL;
     bintree_put(m->tree, idx, c); // TODO can we eliminate the second tree traversal this entails?
-  }
+  } else
+    free(idx);
   
   // add new item to mesh
-  body_list* new = malloc(sizeof(body_list));
+  body_list* new = (body_list*) malloc(sizeof(body_list));
   new->index = i;
   new->next = c->bodies;
   c->bodies = new;
@@ -92,6 +94,7 @@ body_list* mesh_get(mesh* m, vector v, int rad) {
             body_list* append = (body_list*) malloc(sizeof(body_list));
             append->index = item->index;
             append->next = list;
+            list = append;
           }
       }
     }
@@ -114,4 +117,5 @@ void cellfree(void* cp) {
 // TODO to make a general free, we need to use partial applications
 void mesh_free(mesh* m) {
   bintree_free(m->tree, free, cellfree);
+  free(m);
 }

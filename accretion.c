@@ -120,9 +120,8 @@ int collide(int n, body bodies[]) {
 
     // which bodies are in contact with this one?
     // look up position in mesh
-    body_list* cur = mesh_get(m, ipos, 1);
-    body_list* prev = NULL;
-    while (cur) {
+    body_list* next = mesh_get(m, ipos, 1);
+    for (body_list* cur = next; cur; cur = next) {
       // get candidate collider
       int j = cur->index;
       vector jpos = bodies[j].pos;
@@ -133,11 +132,13 @@ int collide(int n, body bodies[]) {
         merge(bsets[i], bsets[j]);
 
       // traverse and free
-      free(prev);
-      prev = cur;
-      cur = cur->next;
+      next = cur->next;
+      free(cur);
     }
   }
+
+  // free the mesh
+  mesh_free(m);
 
   // merge objects
   for (int i = 0; i < n; i++) {
@@ -147,6 +148,10 @@ int collide(int n, body bodies[]) {
       bodies[rootidx] = body_merge(bodies[rootidx], bodies[i]);
     }
   }
+
+  // free sets
+  for (int i = 0; i < n; i++)
+    free(bsets[i]);
 
   // copy down
   int j = 0;
