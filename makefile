@@ -27,6 +27,7 @@ vector.o: vector.c
 	$(CC) $(CFLAGS) vector.c
 
 # TODO: automate initial state generator compilation
+# initial state generators
 gaussian_cloud: gaussian_cloud.o vector.o body.o
 	$(CC) gaussian_cloud.o vector.o body.o -o gaussian_cloud -lm
 
@@ -38,6 +39,13 @@ star_planet: star_planet.o vector.o body.o
 
 star_planet.o: init/star_planet.c vector.h body.h
 	$(CC) $(CFLAGS) init/star_planet.c
+
+# tests
+bintree_test: bintree_test.o bintree.o
+	$(CC) bintree_test.o bintree.o -o bintree_test -lm
+
+bintree_test.o: test/bintree_test.c bintree.h
+	$(CC) $(CFLAGS) test/bintree_test.c
 
 # TODO: automate binary removal
 clean:

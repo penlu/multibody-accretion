@@ -97,5 +97,6 @@ void nfree(node* n, void (*kfree)(void* key), void (*vfree)(void* val)) {
 // free a tree, calling the provided functions on each key/value
 void bintree_free(bintree* t, void (*kfree)(void* key), void (*vfree)(void* val)) {
   nfree(t->root, kfree, vfree);
+  free(t);
 }
 
