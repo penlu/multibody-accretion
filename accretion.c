@@ -8,11 +8,12 @@
 #include "disjoint.h"
 #include "mesh.h"
 
-void output(int n, body bodies[]);
+void output(int n, body bodies[], double time);
 int collide(int n, body bodies[]);
 void step(int n, body bodies[], double h);
 
 int VERBOSITY = 1;
+double STEPSIZE = 0.01;
 
 int main(int argc, char** argv) {
   // parse command line arguments
@@ -48,16 +49,21 @@ int main(int argc, char** argv) {
     body_in_binary(&bodies[i], infile);
 
   // begin simulating
+  double simtime = 0;
   while (1) {
-    output(n, bodies);
+    output(n, bodies, simtime);
     n = collide(n, bodies);
-    step(n, bodies, 0.01);
+    step(n, bodies, STEPSIZE);
+    simtime += STEPSIZE;
   }
 }
 
 // outputs body information
 int generation = 0;
-void output(int n, body bodies[]) {
+void output(int n, body bodies[], double time) {
+  // write time
+  fwrite(&time, 8, 1, stdout);
+
   // dump body information to stdout
   fwrite(&n, 4, 1, stdout);
   for (int i = 0; i < n; i++)

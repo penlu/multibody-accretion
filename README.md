@@ -17,7 +17,7 @@ make all
 The folder `init` contains initial state generators. States are currently 
 represented in a simple binary format to preserve precision:
 ```
-[number of bodies: 4 bytes]
+[number of bodies: int, 4 bytes]
 [body: 56 bytes, comprised of:
   [mass: double, 8 bytes]
   [position: 3 doubles, 24 bytes]
@@ -26,6 +26,10 @@ represented in a simple binary format to preserve precision:
 [body]
 [body]
 ...
+```
+Simulation output is a series of states marked by simulation times, i.e.:
+```
+[time 1: double, 8 bytes][state 1][time 2][state 2]...
 ```
 
 Currently uses leapfrog method to integrate accelerations.
