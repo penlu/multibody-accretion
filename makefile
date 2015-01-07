@@ -49,4 +49,4 @@ bintree_test.o: test/bintree_test.c bintree.h
 
 # TODO: automate binary removal
 clean:
-	rm *.o accretion gaussian_cloud star_planet
+	rm *.o accretion gaussian_cloud star_planet bintree_test
