@@ -17,6 +17,7 @@ void step(int n, body bodies[], double h);
 int VERBOSITY = 1;
 double STEPSIZE = 0.01;
 double DENSITY = 10000000; // density of the sun * 4/3 pi in solar masses/AU^3
+double TIMELIMIT = 0;
 
 int main(int argc, char** argv) {
   // parse command line arguments
@@ -34,7 +35,12 @@ int main(int argc, char** argv) {
       argc -= 2;
       argv += 2;
     } else if (!strcmp(argv[1], "-d")) {
-      DENSITY = atoi(argv[2]);
+      DENSITY = atof(argv[2]);
+
+      argc -= 2;
+      argv += 2;
+    } else if (!strcmp(argv[1], "-t")) {
+      TIMELIMIT = atof(argv[2]);
 
       argc -= 2;
       argv += 2;
@@ -63,7 +69,7 @@ int main(int argc, char** argv) {
 
   // begin simulating
   double simtime = 0;
-  while (1) {
+  while (TIMELIMIT == 0 || simtime < TIMELIMIT) {
     output(n, bodies, simtime);
     n = collide(n, bodies);
     step(n, bodies, STEPSIZE);

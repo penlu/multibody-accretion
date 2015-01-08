@@ -84,4 +84,6 @@ int main(int argc, char** argv) {
     // free contents
     bintree_free(tree, free, free);
   }
+
+  printf("Testing complete; no errors found.\n");
 }

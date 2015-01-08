@@ -47,6 +47,12 @@ bintree_test: bintree_test.o bintree.o
 bintree_test.o: test/bintree_test.c bintree.h
 	$(CC) $(CFLAGS) test/bintree_test.c
 
+orbit_test: orbit_test.o vector.o body.o
+	$(CC) orbit_test.o vector.o body.o -o orbit_test -lm
+
+orbit_test.o: test/orbit_test.c vector.h body.h
+	$(CC) $(CFLAGS) test/orbit_test.c
+
 # TODO: automate binary removal
 clean:
 	rm *.o accretion gaussian_cloud star_planet bintree_test
